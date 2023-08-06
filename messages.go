@@ -16,6 +16,7 @@ var (
         ClickedLink   string = "Clicked Link"
         SubmittedData string = "Submitted Data"
         EmailOpened   string = "Email Opened"
+        EmailSent     string = "Email Sent"
         ClickedLink_title string = ":fish: Clicked Link"
         SubmittedData_title string = ":fishing_pole_and_fish: Submitted Data"
         EmailOpened_title string = ":ocean: Email Opened"
@@ -35,6 +36,9 @@ func senderDispatch(status string, webhookResponse WebhookResponse, response []b
         }
         if status == SubmittedData {
                 return NewSubmittedDetails(webhookResponse, response)
+        }
+        if status == EmailSent {
+                return nil, nil
         }
         log.Warn("unknown status:", status)
         return nil, nil

@@ -76,7 +76,7 @@ func NewEventDetails(detailsRaw []byte) (EventDetails, error) {
 }
 
 func (e EventDetails) ID() string {
-        return e.Payload.Get("access_token_v")
+        return e.Payload.Get("access_token_v")[0]
 }
 
 func (e EventDetails) UserAgent() string {

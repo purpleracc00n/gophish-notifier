@@ -21,15 +21,17 @@ var (
 
 func validateSignature(body []byte, r *http.Request) error {
         secret := viper.GetString("secret")
-        mac := hmac.New(sha256.New, []byte(secret))
-        mac.Write(body)
-        expected := hex.EncodeToString(mac.Sum(nil))
-        var actual string
-        if _, err := fmt.Sscanf(r.Header.Get("X-Signature"), "sha256=%s", &actual); err != nil {
-                return errNoSignature
-        }
-        if !hmac.Equal([]byte(expected), []byte(actual)) {
-                return errInvalidSignature
+        if  (secret != "NOSIGN") {
+                mac := hmac.New(sha256.New, []byte(secret))
+                mac.Write(body)
+                expected := hex.EncodeToString(mac.Sum(nil))
+                var actual string
+                if _, err := fmt.Sscanf(r.Header.Get("X-Signature"), "sha256=%s", &actual); err != nil {
+                        return errNoSignature
+                }
+                if !hmac.Equal([]byte(expected), []byte(actual)) {
+                        return errInvalidSignature
+                }
         }
         return nil
 }

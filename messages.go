@@ -125,6 +125,15 @@ func (w SessionDetails) SendSlack() error {
         return sendSlackAttachment(attachment)
 }
 
+func (w SessionDetails) SendEmail() error {
+        templateString := viper.GetString("email_submitted_credentials_template")
+        body, err := getEmailBody(templateString, w)
+        if err != nil {
+                return err
+        }
+        return sendEmail("PhishBot - Session Captured", body)
+}
+
 type SubmittedDetails struct {
         CampaignID uint
         ID         string

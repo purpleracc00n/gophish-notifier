@@ -15,11 +15,15 @@ import (
 var (
         ClickedLink   string = "Clicked Link"
         SubmittedData string = "Submitted Data"
+        CapturedSession string = "Captured Session"
         EmailOpened   string = "Email Opened"
+        EmailOpened_evilgophish        string = "Email/SMS Opened"
         EmailSent     string = "Email Sent"
+        EmailSent_evilgophish        string = "Email/SMS Sent"
         ClickedLink_title string = ":fish: Clicked Link"
         SubmittedData_title string = ":fishing_pole_and_fish: Submitted Data"
         EmailOpened_title string = ":ocean: Email Opened"
+        CapturedSession_title string = ":shark: Captured Session"
 )
 
 type Sender interface {
@@ -31,13 +35,16 @@ func senderDispatch(status string, webhookResponse WebhookResponse, response []b
         if status == ClickedLink {
                 return NewClickDetails(webhookResponse, response)
         }
-        if status == EmailOpened {
+        if (status == EmailOpened) || (status == EmailOpened_evilgophish) {
                 return NewOpenedDetails(webhookResponse, response)
         }
         if status == SubmittedData {
                 return NewSubmittedDetails(webhookResponse, response)
         }
-        if status == EmailSent {
+        if status == CapturedSession {
+                return NewSessionDetails(webhookResponse, response)
+        }
+        if (status == EmailSent) || (status == EmailSent_evilgophish) {
                 return nil, nil
         }
         log.Warn("unknown status:", status)
@@ -84,6 +91,38 @@ func (e EventDetails) UserAgent() string {
 }
 func (e EventDetails) Address() string {
         return e.Browser["address"]
+}
+
+type SessionDetails struct {
+        CampaignID uint
+        ID         string
+        Email      string
+        Address    string
+        UserAgent  string
+}
+
+func NewSessionDetails(response WebhookResponse, detailsRaw []byte) (SessionDetails, error) {
+        details, err := NewEventDetails(detailsRaw)
+        if err != nil {
+                return SessionDetails{}, err
+        }
+        sessionDetails := SessionDetails{
+                CampaignID: response.CampaignID,
+                ID:         details.ID(),
+                Address:    details.Address(),
+                UserAgent:  details.UserAgent(),
+                Email:      response.Email,
+        }
+        return sessionDetails, nil
+}
+
+func (w SessionDetails) SendSlack() error {
+        red := "#f05b4f"
+        attachment := slack.Attachment{Title: &CapturedSession_title, Color: &red}
+        attachment.AddField(slack.Field{Title: "ID", Value: w.ID})
+        attachment.AddField(slack.Field{Title: "Address", Value: slackFormatIP(w.Address)})
+        attachment.AddField(slack.Field{Title: "User Agent", Value: w.UserAgent})
+        return sendSlackAttachment(attachment)
 }
 
 type SubmittedDetails struct {

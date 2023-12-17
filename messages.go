@@ -117,23 +117,23 @@ type SessionDetails struct {
         UserAgent  string
 }
 
-func GetIPInfoData(ip String){
+func GetIPInfoData(ip string) (IPInfo, error){
         url := fmt.Sprintf("https://ipinfo.io/%s/json?token=%s", ip, viper.GetString("ipinfo_api_token"))
 	resp, err := http.Get(url)
 	if err != nil {
-                return err
+                return nil,err
 	}
         defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return nil,err
 	}
         var ipInfo IPInfo
 	err = json.Unmarshal(body, &ipInfo)
 	if err != nil {
-		return err
+		return nil,err
 	}
-        return ipInfo
+        return ipInfo,nil
 }
 
 func NewSessionDetails(response WebhookResponse, detailsRaw []byte) (SessionDetails, error) {
@@ -154,7 +154,7 @@ func NewSessionDetails(response WebhookResponse, detailsRaw []byte) (SessionDeta
 func (w SessionDetails) SendSlack() error {
         red := "#f05b4f"
         attachment := slack.Attachment{Title: &CapturedSession_title, Color: &red}
-        ipinfo = GetIPInfoData(w.Address)
+        ipinfo,err = GetIPInfoData(w.Address)
         attachment.AddField(slack.Field{Title: "ID", Value: w.ID})
         attachment.AddField(slack.Field{Title: "Address", Value: (w.Address)})
         attachment.AddField(slack.Field{Title: "Country", Value: ipinfo.Country})

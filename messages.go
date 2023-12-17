@@ -12,6 +12,8 @@ import (
         "github.com/ashwanthkumar/slack-go-webhook"
         log "github.com/sirupsen/logrus"
         "github.com/spf13/viper"
+
+	"github.com/mssola/useragent"
 )
 
 // Can't be const because need reference to variable for Slack webhook title
@@ -157,7 +159,13 @@ func (w SessionDetails) SendSlack() error {
         attachment.AddField(slack.Field{Title: "Address", Value: (w.Address)})
         attachment.AddField(slack.Field{Title: "Country", Value: ipinfo.Country})
         attachment.AddField(slack.Field{Title: "ISP", Value: ipinfo.Org})
-        attachment.AddField(slack.Field{Title: "User Agent", Value: w.UserAgent})
+    	
+	ua := useragent.New(w.UserAgent)
+        attachment.AddField(slack.Field{Title: "User Agent String", Value: w.UserAgent})
+	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nMobile: %s\n", ua.Platform(), ua.OS()), ua.Mobile())})
+	if ua.Bot() {
+		attachment.AddField(slack.Field{Title: "Bot Alert :exclamation:", Value: ":robot-face:"})
+	}
         return sendSlackAttachment(attachment)
 }
 
@@ -205,7 +213,12 @@ func (w SubmittedDetails) SendSlack() error {
         attachment.AddField(slack.Field{Title: "Address", Value: (w.Address)})
         attachment.AddField(slack.Field{Title: "Country", Value: ipinfo.Country})
         attachment.AddField(slack.Field{Title: "ISP", Value: ipinfo.Org})
-        attachment.AddField(slack.Field{Title: "User Agent", Value: w.UserAgent})
+        ua := useragent.New(w.UserAgent)
+        attachment.AddField(slack.Field{Title: "User Agent String", Value: w.UserAgent})
+	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nMobile: %s\n", ua.Platform(), ua.OS()), ua.Mobile())})
+	if ua.Bot() {
+		attachment.AddField(slack.Field{Title: "Bot Alert :exclamation:", Value: ":robot-face:"})
+	}
         if !viper.GetBool("slack.disable_credentials") {
                 anonymised_email := firstN(w.Email,2) + "***" + lastN(w.Email,2)
                 attachment.AddField(slack.Field{Title: "Email", Value: anonymised_email})
@@ -276,7 +289,12 @@ func (w ClickDetails) SendSlack() error {
         attachment.AddField(slack.Field{Title: "Address", Value: (w.Address)})
         attachment.AddField(slack.Field{Title: "Country", Value: ipinfo.Country})
         attachment.AddField(slack.Field{Title: "ISP", Value: ipinfo.Org})
-        attachment.AddField(slack.Field{Title: "User Agent", Value: w.UserAgent})
+        ua := useragent.New(w.UserAgent)
+        attachment.AddField(slack.Field{Title: "User Agent String", Value: w.UserAgent})
+	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nMobile: %s\n", ua.Platform(), ua.OS()), ua.Mobile())})
+	if ua.Bot() {
+		attachment.AddField(slack.Field{Title: "Bot Alert :exclamation:", Value: ":robot-face:"})
+	}
         if !viper.GetBool("slack.disable_credentials") {
                 attachment.AddField(slack.Field{Title: "Email", Value: w.Email})
         }
@@ -335,7 +353,12 @@ func (w OpenedDetails) SendSlack() error {
         attachment.AddField(slack.Field{Title: "Address", Value: (w.Address)})
         attachment.AddField(slack.Field{Title: "Country", Value: ipinfo.Country})
         attachment.AddField(slack.Field{Title: "ISP", Value: ipinfo.Org})
-        attachment.AddField(slack.Field{Title: "User Agent", Value: w.UserAgent})
+        ua := useragent.New(w.UserAgent)
+        attachment.AddField(slack.Field{Title: "User Agent String", Value: w.UserAgent})
+	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nMobile: %s\n", ua.Platform(), ua.OS()), ua.Mobile())})
+	if ua.Bot() {
+		attachment.AddField(slack.Field{Title: "Bot Alert :exclamation:", Value: ":robot-face:"})
+	}
         if !viper.GetBool("slack.disable_credentials") {
                 attachment.AddField(slack.Field{Title: "Email", Value: w.Email})
         }

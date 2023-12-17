@@ -154,7 +154,7 @@ func NewSessionDetails(response WebhookResponse, detailsRaw []byte) (SessionDeta
 func (w SessionDetails) SendSlack() error {
         red := "#f05b4f"
         attachment := slack.Attachment{Title: &CapturedSession_title, Color: &red}
-        ipinfo,err = GetIPInfoData(w.Address)
+        ipinfo, err := GetIPInfoData(w.Address)
         attachment.AddField(slack.Field{Title: "ID", Value: w.ID})
         attachment.AddField(slack.Field{Title: "Address", Value: (w.Address)})
         attachment.AddField(slack.Field{Title: "Country", Value: ipinfo.Country})
@@ -208,7 +208,7 @@ func NewSubmittedDetails(response WebhookResponse, detailsRaw []byte) (Submitted
 func (w SubmittedDetails) SendSlack() error {
         red := "#f05b4f"
         attachment := slack.Attachment{Title: &SubmittedData_title, Color: &red}
-        ipinfo = GetIPInfoData(w.Address)
+        ipinfo, err := GetIPInfoData(w.Address)
         attachment.AddField(slack.Field{Title: "ID", Value: w.ID})
         attachment.AddField(slack.Field{Title: "Address", Value: (w.Address)})
         attachment.AddField(slack.Field{Title: "Country", Value: ipinfo.Country})
@@ -284,7 +284,7 @@ func NewClickDetails(response WebhookResponse, detailsRaw []byte) (ClickDetails,
 func (w ClickDetails) SendSlack() error {
         orange := "#ffa500"
         attachment := slack.Attachment{Title: &ClickedLink_title, Color: &orange}
-        ipinfo = GetIPInfoData(w.Address)
+        ipinfo, err := GetIPInfoData(w.Address)
         attachment.AddField(slack.Field{Title: "ID", Value: w.ID})
         attachment.AddField(slack.Field{Title: "Address", Value: (w.Address)})
         attachment.AddField(slack.Field{Title: "Country", Value: ipinfo.Country})
@@ -348,7 +348,7 @@ func NewOpenedDetails(response WebhookResponse, detailsRaw []byte) (OpenedDetail
 func (w OpenedDetails) SendSlack() error {
         yellow := "#ffff00"
         attachment := slack.Attachment{Title: &EmailOpened_title, Color: &yellow}
-        ipinfo = GetIPInfoData(w.Address)
+        ipinfo, err := GetIPInfoData(w.Address)
         attachment.AddField(slack.Field{Title: "ID", Value: w.ID})
         attachment.AddField(slack.Field{Title: "Address", Value: (w.Address)})
         attachment.AddField(slack.Field{Title: "Country", Value: ipinfo.Country})

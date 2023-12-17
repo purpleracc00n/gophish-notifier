@@ -121,19 +121,19 @@ func GetIPInfoData(ip string) (IPInfo, error){
         url := fmt.Sprintf("https://ipinfo.io/%s/json?token=%s", ip, viper.GetString("ipinfo_api_token"))
 	resp, err := http.Get(url)
 	if err != nil {
-                return nil,err
+                return nil, err
 	}
         defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
         var ipInfo IPInfo
 	err = json.Unmarshal(body, &ipInfo)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
-        return ipInfo,nil
+        return ipInfo, nil
 }
 
 func NewSessionDetails(response WebhookResponse, detailsRaw []byte) (SessionDetails, error) {

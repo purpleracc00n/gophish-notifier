@@ -4,7 +4,10 @@ import (
         "encoding/json"
         "html/template"
         "net/url"
+        "net/http"
+        "fmt"
         "strings"
+        "io/ioutil"
 
         "github.com/ashwanthkumar/slack-go-webhook"
         log "github.com/sirupsen/logrus"
@@ -93,12 +96,42 @@ func (e EventDetails) Address() string {
         return e.Browser["address"]
 }
 
+type IPInfo struct {
+	IP         string `json:"ip"`
+	Hostname   string `json:"hostname"`
+	City       string `json:"city"`
+	Region     string `json:"region"`
+	Country    string `json:"country"`
+	Location   string `json:"loc"`
+	Org        string `json:"org"`
+	PostalCode string `json:"postal"`
+}
+
 type SessionDetails struct {
         CampaignID uint
         ID         string
         Email      string
         Address    string
         UserAgent  string
+}
+
+func GetIPInfoData(ip String){
+        url := fmt.Sprintf("https://ipinfo.io/%s/json?token=%s", ip, viper.GetString("ipinfo_api_token"))
+	resp, err := http.Get(url)
+	if err != nil {
+                return err
+	}
+        defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+        var ipInfo IPInfo
+	err = json.Unmarshal(body, &ipInfo)
+	if err != nil {
+		return err
+	}
+        return ipInfo
 }
 
 func NewSessionDetails(response WebhookResponse, detailsRaw []byte) (SessionDetails, error) {
@@ -119,8 +152,11 @@ func NewSessionDetails(response WebhookResponse, detailsRaw []byte) (SessionDeta
 func (w SessionDetails) SendSlack() error {
         red := "#f05b4f"
         attachment := slack.Attachment{Title: &CapturedSession_title, Color: &red}
+        ipinfo = GetIPInfoData(w.Address)
         attachment.AddField(slack.Field{Title: "ID", Value: w.ID})
-        attachment.AddField(slack.Field{Title: "Address", Value: slackFormatIP(w.Address)})
+        attachment.AddField(slack.Field{Title: "Address", Value: (w.Address)})
+        attachment.AddField(slack.Field{Title: "Country", Value: ipinfo.Country})
+        attachment.AddField(slack.Field{Title: "ISP", Value: ipinfo.Org})
         attachment.AddField(slack.Field{Title: "User Agent", Value: w.UserAgent})
         return sendSlackAttachment(attachment)
 }
@@ -164,8 +200,11 @@ func NewSubmittedDetails(response WebhookResponse, detailsRaw []byte) (Submitted
 func (w SubmittedDetails) SendSlack() error {
         red := "#f05b4f"
         attachment := slack.Attachment{Title: &SubmittedData_title, Color: &red}
+        ipinfo = GetIPInfoData(w.Address)
         attachment.AddField(slack.Field{Title: "ID", Value: w.ID})
-        attachment.AddField(slack.Field{Title: "Address", Value: slackFormatIP(w.Address)})
+        attachment.AddField(slack.Field{Title: "Address", Value: (w.Address)})
+        attachment.AddField(slack.Field{Title: "Country", Value: ipinfo.Country})
+        attachment.AddField(slack.Field{Title: "ISP", Value: ipinfo.Org})
         attachment.AddField(slack.Field{Title: "User Agent", Value: w.UserAgent})
         if !viper.GetBool("slack.disable_credentials") {
                 anonymised_email := firstN(w.Email,2) + "***" + lastN(w.Email,2)
@@ -232,8 +271,11 @@ func NewClickDetails(response WebhookResponse, detailsRaw []byte) (ClickDetails,
 func (w ClickDetails) SendSlack() error {
         orange := "#ffa500"
         attachment := slack.Attachment{Title: &ClickedLink_title, Color: &orange}
+        ipinfo = GetIPInfoData(w.Address)
         attachment.AddField(slack.Field{Title: "ID", Value: w.ID})
-        attachment.AddField(slack.Field{Title: "Address", Value: slackFormatIP(w.Address)})
+        attachment.AddField(slack.Field{Title: "Address", Value: (w.Address)})
+        attachment.AddField(slack.Field{Title: "Country", Value: ipinfo.Country})
+        attachment.AddField(slack.Field{Title: "ISP", Value: ipinfo.Org})
         attachment.AddField(slack.Field{Title: "User Agent", Value: w.UserAgent})
         if !viper.GetBool("slack.disable_credentials") {
                 attachment.AddField(slack.Field{Title: "Email", Value: w.Email})
@@ -288,8 +330,11 @@ func NewOpenedDetails(response WebhookResponse, detailsRaw []byte) (OpenedDetail
 func (w OpenedDetails) SendSlack() error {
         yellow := "#ffff00"
         attachment := slack.Attachment{Title: &EmailOpened_title, Color: &yellow}
+        ipinfo = GetIPInfoData(w.Address)
         attachment.AddField(slack.Field{Title: "ID", Value: w.ID})
-        attachment.AddField(slack.Field{Title: "Address", Value: slackFormatIP(w.Address)})
+        attachment.AddField(slack.Field{Title: "Address", Value: (w.Address)})
+        attachment.AddField(slack.Field{Title: "Country", Value: ipinfo.Country})
+        attachment.AddField(slack.Field{Title: "ISP", Value: ipinfo.Org})
         attachment.AddField(slack.Field{Title: "User Agent", Value: w.UserAgent})
         if !viper.GetBool("slack.disable_credentials") {
                 attachment.AddField(slack.Field{Title: "Email", Value: w.Email})

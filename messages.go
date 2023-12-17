@@ -118,20 +118,20 @@ type SessionDetails struct {
 }
 
 func GetIPInfoData(ip string) (IPInfo, error){
+	var ipInfo IPInfo
         url := fmt.Sprintf("https://ipinfo.io/%s/json?token=%s", ip, viper.GetString("ipinfo_api_token"))
 	resp, err := http.Get(url)
 	if err != nil {
-                return nil, err
+                return ipInfo, err
 	}
         defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return ipInfo, err
 	}
-        var ipInfo IPInfo
 	err = json.Unmarshal(body, &ipInfo)
 	if err != nil {
-		return nil, err
+		return ipInfo, err
 	}
         return ipInfo, nil
 }
@@ -155,6 +155,9 @@ func (w SessionDetails) SendSlack() error {
         red := "#f05b4f"
         attachment := slack.Attachment{Title: &CapturedSession_title, Color: &red}
         ipinfo, err := GetIPInfoData(w.Address)
+	if err != nil {
+                return err
+        }
         attachment.AddField(slack.Field{Title: "ID", Value: w.ID})
         attachment.AddField(slack.Field{Title: "Address", Value: (w.Address)})
         attachment.AddField(slack.Field{Title: "Country", Value: ipinfo.Country})
@@ -209,6 +212,9 @@ func (w SubmittedDetails) SendSlack() error {
         red := "#f05b4f"
         attachment := slack.Attachment{Title: &SubmittedData_title, Color: &red}
         ipinfo, err := GetIPInfoData(w.Address)
+	if err != nil {
+                return err
+        }
         attachment.AddField(slack.Field{Title: "ID", Value: w.ID})
         attachment.AddField(slack.Field{Title: "Address", Value: (w.Address)})
         attachment.AddField(slack.Field{Title: "Country", Value: ipinfo.Country})
@@ -285,6 +291,9 @@ func (w ClickDetails) SendSlack() error {
         orange := "#ffa500"
         attachment := slack.Attachment{Title: &ClickedLink_title, Color: &orange}
         ipinfo, err := GetIPInfoData(w.Address)
+	if err != nil {
+                return err
+        }
         attachment.AddField(slack.Field{Title: "ID", Value: w.ID})
         attachment.AddField(slack.Field{Title: "Address", Value: (w.Address)})
         attachment.AddField(slack.Field{Title: "Country", Value: ipinfo.Country})
@@ -349,6 +358,9 @@ func (w OpenedDetails) SendSlack() error {
         yellow := "#ffff00"
         attachment := slack.Attachment{Title: &EmailOpened_title, Color: &yellow}
         ipinfo, err := GetIPInfoData(w.Address)
+	if err != nil {
+                return err
+        }
         attachment.AddField(slack.Field{Title: "ID", Value: w.ID})
         attachment.AddField(slack.Field{Title: "Address", Value: (w.Address)})
         attachment.AddField(slack.Field{Title: "Country", Value: ipinfo.Country})

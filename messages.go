@@ -165,7 +165,7 @@ func (w SessionDetails) SendSlack() error {
     	
 	ua := useragent.New(w.UserAgent)
         attachment.AddField(slack.Field{Title: "User Agent String", Value: w.UserAgent})
-	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nMobile: %s\n", ua.Platform(), ua.OS(), ua.Mobile())})
+	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nMobile: %t\n", ua.Platform(), ua.OS(), ua.Mobile())})
 	if ua.Bot() {
 		attachment.AddField(slack.Field{Title: "Bot Alert :exclamation:", Value: ":robot-face:"})
 	}
@@ -221,7 +221,7 @@ func (w SubmittedDetails) SendSlack() error {
         attachment.AddField(slack.Field{Title: "ISP", Value: ipinfo.Org})
         ua := useragent.New(w.UserAgent)
         attachment.AddField(slack.Field{Title: "User Agent String", Value: w.UserAgent})
-	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nMobile: %s\n", ua.Platform(), ua.OS(), ua.Mobile())})
+	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nMobile: %t\n", ua.Platform(), ua.OS(), ua.Mobile())})
 	if ua.Bot() {
 		attachment.AddField(slack.Field{Title: "Bot Alert :exclamation:", Value: ":robot-face:"})
 	}
@@ -300,7 +300,7 @@ func (w ClickDetails) SendSlack() error {
         attachment.AddField(slack.Field{Title: "ISP", Value: ipinfo.Org})
         ua := useragent.New(w.UserAgent)
         attachment.AddField(slack.Field{Title: "User Agent String", Value: w.UserAgent})
-	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nMobile: %s\n", ua.Platform(), ua.OS(), ua.Mobile())})
+	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nMobile: %t\n", ua.Platform(), ua.OS(), ua.Mobile())})
 	if ua.Bot() {
 		attachment.AddField(slack.Field{Title: "Bot Alert :exclamation:", Value: ":robot-face:"})
 	}
@@ -367,7 +367,7 @@ func (w OpenedDetails) SendSlack() error {
         attachment.AddField(slack.Field{Title: "ISP", Value: ipinfo.Org})
         ua := useragent.New(w.UserAgent)
         attachment.AddField(slack.Field{Title: "User Agent String", Value: w.UserAgent})
-	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nMobile: %s\n", ua.Platform(), ua.OS(), ua.Mobile())})
+	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nMobile: %t\n", ua.Platform(), ua.OS(), ua.Mobile())})
 	if ua.Bot() {
 		attachment.AddField(slack.Field{Title: "Bot Alert :exclamation:", Value: ":robot-face:"})
 	}

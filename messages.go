@@ -95,7 +95,12 @@ func (e EventDetails) UserAgent() string {
         return e.Browser["user-agent"]
 }
 func (e EventDetails) Address() string {
-        return e.Browser["address"]
+	if _, exists := e.Browser["orig-address"]; exists {
+        	return e.Browser["orig-address"]
+    	} else {
+        	return e.Browser["address"]
+    	}
+        
 }
 
 type IPInfo struct {

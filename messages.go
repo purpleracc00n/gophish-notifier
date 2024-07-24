@@ -8,6 +8,7 @@ import (
         "fmt"
         "strings"
         "io/ioutil"
+	"os"
 
         "github.com/ashwanthkumar/slack-go-webhook"
         log "github.com/sirupsen/logrus"
@@ -103,6 +104,7 @@ func (e EventDetails) Address() string {
         
 }
 
+// IPInfo lookup structure
 type IPInfo struct {
 	IP         string `json:"ip"`
 	Hostname   string `json:"hostname"`
@@ -122,6 +124,7 @@ type SessionDetails struct {
         UserAgent  string
 }
 
+// Lookup IP on IPInfo
 func GetIPInfoData(ip string) (IPInfo, error){
 	var ipInfo IPInfo
         url := fmt.Sprintf("https://ipinfo.io/%s/json?token=%s", ip, viper.GetString("ipinfo_api_token"))
@@ -139,6 +142,61 @@ func GetIPInfoData(ip string) (IPInfo, error){
 		return ipInfo, err
 	}
         return ipInfo, nil
+}
+
+// For the browser version lookup
+type CanIUse_Browser struct {
+    Browser     string              `json:"browser"`
+    LongName    string              `json:"long_name"`
+    Abbr        string              `json:"abbr"`
+    Prefix      string              `json:"prefix"`
+    Type        string              `json:"type"`
+    UsageGlobal map[string]float64  `json:"usage_global"`
+    Versions    []string            `json:"versions"`
+}
+
+// Load browsers from CanIUse JSON DB file
+func loadBrowsers(filename string) ([]CanIUse_Browser, error) {
+    // Read the JSON file
+    file, err := os.Open(filename)
+    if err != nil {
+        return nil, err
+    }
+    defer file.Close()
+
+    // Read the file content
+    data, err := ioutil.ReadAll(file)
+    if err != nil {
+        return nil, err
+    }
+
+    // Split the data by newline to handle multiple JSON objects
+    var browsers []CanIUse_Browser
+    var temp CanIUse_Browser
+    lines := string(data)
+    for _, line := range lines {
+        err := json.Unmarshal([]byte(line), &temp)
+        if err != nil {
+            return nil, err
+        }
+        browsers = append(browsers, temp)
+    }
+
+    return browsers, nil
+}
+
+// do browser version lookup in the local file
+func findBrowserVersion(browsers []CanIUse_Browser, browserName, version string) (*CanIUse_Browser, bool) {
+    for _, browser := range browsers {
+        if browser.Browser == browserName {
+            for _, v := range browser.Versions {
+                if v == version {
+                    return &browser, true
+                }
+            }
+        }
+    }
+    return nil, false
 }
 
 func NewSessionDetails(response WebhookResponse, detailsRaw []byte) (SessionDetails, error) {
@@ -170,7 +228,8 @@ func (w SessionDetails) SendSlack() error {
     	
 	ua := useragent.New(w.UserAgent)
         attachment.AddField(slack.Field{Title: "User Agent String", Value: w.UserAgent})
-	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nMobile: %t\n", ua.Platform(), ua.OS(), ua.Mobile())})
+    	browser_name, browser_version := ua.Browser()
+	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nBrowser: %s %s\nMobile: %t\n", ua.Platform(), ua.OS(), browser_name, browser_version, ua.Mobile())})
 	if ua.Bot() {
 		attachment.AddField(slack.Field{Title: "Bot Alert :exclamation:", Value: ":robot-face:"})
 	}

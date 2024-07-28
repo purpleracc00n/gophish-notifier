@@ -173,12 +173,6 @@ func (w SessionDetails) SendSlack() error {
     	
 	ua := useragent.New(w.UserAgent)
         attachment.AddField(slack.Field{Title: "User Agent String", Value: w.UserAgent})
-
-	filename := "/opt/gophish-notifier/caniuse_db.json"
-	browsers, err := loadBrowsers(filename)
-        if err != nil {
-                return err
-        }
 	browser_name, browser_version := ua.Browser()
 	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nBrowser: %s %s\nMobile: %t\n", ua.Platform(), ua.OS(), browser_name, browser_version, ua.Mobile())})
 	if ua.Bot() {

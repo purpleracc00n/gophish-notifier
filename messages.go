@@ -144,123 +144,6 @@ func GetIPInfoData(ip string) (IPInfo, error){
         return ipInfo, nil
 }
 
-// For the browser version lookup
-type CanIUse_Browser struct {
-    Browser     string              `json:"browser"`
-    LongName    string              `json:"long_name"`
-    Abbr        string              `json:"abbr"`
-    Prefix      string              `json:"prefix"`
-    Type        string              `json:"type"`
-    UsageGlobal map[string]float64  `json:"usage_global"`
-    Versions    []string            `json:"versions"`
-}
-
-// Load browsers from CanIUse JSON DB file
-func loadBrowsers(filename string) ([]CanIUse_Browser, error) {
-    // Read the JSON file
-    file, err := os.Open(filename)
-    if err != nil {
-        return nil, err
-    }
-    defer file.Close()
-
-    // Read the file content
-    data, err := ioutil.ReadAll(file)
-    if err != nil {
-        return nil, err
-    }
-
-    // Split the data by newline to handle multiple JSON objects
-    var browsers []CanIUse_Browser
-    var temp CanIUse_Browser
-    lines := string(data)
-    for _, line := range lines {
-        if strings.TrimSpace(line) == "" {
-            continue
-        }
-        err := json.Unmarshal([]byte(line), &temp)
-        if err != nil {
-            return nil, err
-        }
-        browsers = append(browsers, temp)
-    }
-
-    return browsers, nil
-}
-
-// parseVersion converts a version string to a sortable numeric format.
-func parseVersion(version string) []int {
-    var result []int
-    re := regexp.MustCompile(`[0-9]+`)
-    for _, match := range re.FindAllString(version, -1) {
-        num, _ := strconv.Atoi(match)
-        result = append(result, num)
-    }
-    return result
-}
-
-// compareVersions compares two version slices in descending order.
-func compareVersions(v1, v2 []int) bool {
-    for i := 0; i < len(v1) && i < len(v2); i++ {
-        if v1[i] > v2[i] {
-            return true
-        } else if v1[i] < v2[i] {
-            return false
-        }
-    }
-    return len(v1) > len(v2)
-}
-
-// do browser version lookup in the local file
-func findBrowserVersion(browsers []CanIUse_Browser, browserName, version string) (*CanIUse_Browser, bool) {
-	var targetBrowser *CanIUse_Browser
-    	for _, browser := range browsers {
-    		if browser.Browser == browserName {
-			targetBrowser = &browser
-			break
-	        }
-	    }
-
-	if targetBrowser == nil {
-		return "Browser not found"
-	}
-	
-	// If browser version is not in wide use 
-	usage, exists := targetBrowser.UsageGlobal[version]
-	if !exists || usage == 0 {
-		return fmt.Sprintf("\033[31m%s %s\033[0m", targetBrowser.Browser, version) // Red	
-	}
-
-	// Get non-zero usage versions and sort them
-	var nonZeroUseVersions []struct {
-		Version string
-	        Parsed  []int
-	}
-	for v, u := range targetBrowser.UsageGlobal {
-	        if u > 0 {
-			nonZeroUseVersions = append(nonZeroUseVersions, struct {
-				Version string
-				Parsed  []int
-			}{Version: v, Parsed: parseVersion(v)})
-	        }
-	}
-
-	// Sort versions in descending order
-	sort.Slice(nonZeroUseVersions, func(i, j int) bool {
-		return compareVersions(nonZeroUseVersions[i].Parsed, nonZeroUseVersions[j].Parsed)
-	})
-
-	// Check if the version is among the top 3
-	for i := 0; i < 3 && i < len(nonZeroVersions); i++ {
-		if nonZeroVersions[i].Version == version {
-			return fmt.Sprintf("\033[32m%s %s\033[0m", targetBrowser.Browser, version) // Green
-		}
-	}
-
-	return fmt.Sprintf("\033[33m%s %s\033[0m", targetBrowser.Browser, version) // Yellow
-	
-}
-
 func NewSessionDetails(response WebhookResponse, detailsRaw []byte) (SessionDetails, error) {
         details, err := NewEventDetails(detailsRaw)
         if err != nil {
@@ -297,8 +180,7 @@ func (w SessionDetails) SendSlack() error {
                 return err
         }
 	browser_name, browser_version := ua.Browser()
-	browser := findBrowserVersion(browsers, browser_name, browser_version)
-	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nBrowser: %s\nMobile: %t\n", ua.Platform(), ua.OS(), browser, ua.Mobile())})
+	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nBrowser: %s %s\nMobile: %t\n", ua.Platform(), ua.OS(), browser_name, browser_version, ua.Mobile())})
 	if ua.Bot() {
 		attachment.AddField(slack.Field{Title: "Bot Alert :exclamation:", Value: ":robot-face:"})
 	}
@@ -354,8 +236,8 @@ func (w SubmittedDetails) SendSlack() error {
         attachment.AddField(slack.Field{Title: "ISP", Value: ipinfo.Org})
         ua := useragent.New(w.UserAgent)
         attachment.AddField(slack.Field{Title: "User Agent String", Value: w.UserAgent})
-	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nMobile: %t\n", ua.Platform(), ua.OS(), ua.Mobile())})
-	if ua.Bot() {
+	browser_name, browser_version := ua.Browser()
+	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nBrowser: %s %s\nMobile: %t\n", ua.Platform(), ua.OS(), browser_name, browser_version, ua.Mobile())})	if ua.Bot() {
 		attachment.AddField(slack.Field{Title: "Bot Alert :exclamation:", Value: ":robot-face:"})
 	}
         if !viper.GetBool("slack.disable_credentials") {
@@ -433,7 +315,8 @@ func (w ClickDetails) SendSlack() error {
         attachment.AddField(slack.Field{Title: "ISP", Value: ipinfo.Org})
         ua := useragent.New(w.UserAgent)
         attachment.AddField(slack.Field{Title: "User Agent String", Value: w.UserAgent})
-	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nMobile: %t\n", ua.Platform(), ua.OS(), ua.Mobile())})
+	browser_name, browser_version := ua.Browser()
+	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nBrowser: %s %s\nMobile: %t\n", ua.Platform(), ua.OS(), browser_name, browser_version, ua.Mobile())})
 	if ua.Bot() {
 		attachment.AddField(slack.Field{Title: "Bot Alert :exclamation:", Value: ":robot-face:"})
 	}
@@ -500,7 +383,8 @@ func (w OpenedDetails) SendSlack() error {
         attachment.AddField(slack.Field{Title: "ISP", Value: ipinfo.Org})
         ua := useragent.New(w.UserAgent)
         attachment.AddField(slack.Field{Title: "User Agent String", Value: w.UserAgent})
-	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nMobile: %t\n", ua.Platform(), ua.OS(), ua.Mobile())})
+	browser_name, browser_version := ua.Browser()
+	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nBrowser: %s %s\nMobile: %t\n", ua.Platform(), ua.OS(), browser_name, browser_version, ua.Mobile())})
 	if ua.Bot() {
 		attachment.AddField(slack.Field{Title: "Bot Alert :exclamation:", Value: ":robot-face:"})
 	}

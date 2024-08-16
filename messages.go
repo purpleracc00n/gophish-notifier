@@ -231,7 +231,8 @@ func (w SubmittedDetails) SendSlack() error {
         ua := useragent.New(w.UserAgent)
         attachment.AddField(slack.Field{Title: "User Agent String", Value: w.UserAgent})
 	browser_name, browser_version := ua.Browser()
-	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nBrowser: %s %s\nMobile: %t\n", ua.Platform(), ua.OS(), browser_name, browser_version, ua.Mobile())})	if ua.Bot() {
+	attachment.AddField(slack.Field{Title: "User Agent Details", Value: fmt.Sprintf("Platform: %s\nOS: %s\nBrowser: %s %s\nMobile: %t\n", ua.Platform(), ua.OS(), browser_name, browser_version, ua.Mobile())})	
+	if ua.Bot() {
 		attachment.AddField(slack.Field{Title: "Bot Alert :exclamation:", Value: ":robot-face:"})
 	}
         if !viper.GetBool("slack.disable_credentials") {

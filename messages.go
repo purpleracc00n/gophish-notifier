@@ -8,7 +8,6 @@ import (
         "fmt"
         "strings"
         "io/ioutil"
-	"os"
 
         "github.com/ashwanthkumar/slack-go-webhook"
         log "github.com/sirupsen/logrus"
